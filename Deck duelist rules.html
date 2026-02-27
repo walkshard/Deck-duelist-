@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deck Duelists: Tactical Rulebook</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: #eee; line-height: 1.6; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: #111; padding: 30px; border-radius: 15px; border: 1px solid #333; }
+        h1, h2 { color: #f1c40f; text-transform: uppercase; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .suit-spades { color: #fff; } .suit-clubs { color: #aaa; }
+        .suit-hearts { color: #e74c3c; } .suit-diamonds { color: #3498db; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .card-ref { background: #1a1a1a; padding: 15px; border-radius: 8px; border-left: 4px solid #f1c40f; }
+        
+        .cycle-box { text-align: center; background: #1a1a1a; padding: 20px; border-radius: 10px; border: 1px dashed #f1c40f; margin: 20px 0; }
+        .highlight { color: #f1c40f; font-weight: bold; }
+        .limit-box { background: rgba(231, 76, 60, 0.1); border: 1px solid #e74c3c; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        footer { text-align: center; margin-top: 40px; color: #555; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Deck Duelists Official Rules</h1>
+    <p>A tactical 2-player battle engine using a standard 52-card deck.</p>
+
+    <h2>1. The Deck Setup</h2>
+    <p>Each player uses a balanced 26-card deck consisting of:</p>
+    <ul>
+        <li><span class="highlight">6 Monsters:</span> J, Q, K (2 of each).</li>
+        <li><span class="highlight">4 Traps:</span> 10, A (2 of each).</li>
+        <li><span class="highlight">16 Combat Cards:</span> Numbered 2 through 9.</li>
+    </ul>
+
+    <h2>2. Attachment Limits</h2>
+    <div class="limit-box">
+        <strong>⚠️ Tactical Constraint:</strong> To prevent "One-Turn Kills," a monster may only receive <span class="highlight">ONE Attack boost</span> and <span class="highlight">ONE Shield boost</span> per turn. You must build your power over multiple rounds.
+    </div>
+
+    <h2>3. Card Roles & HUD</h2>
+    <div class="grid">
+        <div class="card-ref">
+            <span class="highlight">Vanguards (Field)</span><br>
+            - <strong>Top Left:</strong> Rank & Suit<br>
+            - <strong>Top Right:</strong> Current Attack<br>
+            - <strong>Bottom Right:</strong> Defense Shield<br>
+            - <strong>Bottom Mid:</strong> Trap Status
+        </div>
+        <div class="card-ref">
+            <span class="highlight">Traps (10 & Ace)</span><br>
+            Set these cards on your monsters to prepare for the opponent's turn. Traps must be targeted to a specific Vanguard.
+        </div>
+    </div>
+
+    <h2>4. Combat Rules</h2>
+    <ul>
+        <li><strong>First Turn:</strong> No attacks are permitted. Use this time to Summon and Shield.</li>
+        <li><strong>One Action:</strong> Each monster may only attack <span class="highlight">once per turn</span>. After attacking, they are exhausted until your next turn.</li>
+        <li><strong>Elemental Cycle:</strong> ♠ beats ♣ | ♣ beats ♦ | ♦ beats ♥ | ♥ beats ♠. Successful advantage grants <span class="highlight">+2 Attack Power</span>.</li>
+        <li><strong>Direct Attacks:</strong> If the opponent has no monsters, you may target their Life Points (LP) directly.</li>
+    </ul>
+
+    <h2>5. Win Conditions</h2>
+    <p>Reduce the opponent's Life Points from 30 to <span class="highlight">0 or below</span> to win instantly. If the deck is depleted, the player with the highest remaining LP is the victor.</p>
+
+    <footer>DECK DUELISTS ENGINE V1.2 - REVISED FEB 2026</footer>
+</div>
+
+</body>
+</html>
