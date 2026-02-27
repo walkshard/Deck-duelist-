@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Deck Duelists: Balanced Edition</title>
+    <title>Deck Duelists: Final Edition</title>
     <style>
         body { 
             font-family: sans-serif; background: #000; color: #eee; 
@@ -27,15 +27,16 @@
             height: 22vh; background: #111; border-top: 2px solid #f1c40f;
             display: grid; grid-template-columns: repeat(3, 1fr); 
             grid-template-rows: 1fr 1fr; gap: 3px; padding: 3px;
+            padding-bottom: env(safe-area-inset-bottom);
         }
         .card { 
-            height: 13vh; width: 9vh; 
+            height: 12vh; width: 8.5vh; 
             background: #fff; color: #000; border-radius: 5px; 
             display: flex; flex-direction: column; position: relative;
             padding: 4px; cursor: pointer; border: 2px solid transparent; 
             font-weight: bold; font-size: 0.9rem; box-sizing: border-box; flex-shrink: 0;
         }
-        .field-card { height: 16vh; width: 11vh; }
+        .field-card { height: 15vh; width: 10.5vh; }
         .exhausted { opacity: 0.4; }
         .card.selected { border-color: #f1c40f; background: #fffde7; }
         .card.target-mode { border-color: #2ecc71; box-shadow: 0 0 10px #2ecc71; }
@@ -53,13 +54,16 @@
         button { width: 100%; height: 100%; background: #f1c40f; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.7rem; text-transform: uppercase; }
         .btn-go { background: #4caf50; color: white; }
         .btn-end { background: #f44336; color: white; }
+        .rules-btn { position: fixed; top: 5px; right: 5px; color: #f1c40f; font-size: 0.7rem; text-decoration: none; border: 1px solid #f1c40f; padding: 4px; border-radius: 4px; background: rgba(0,0,0,0.6); z-index: 1001; }
     </style>
 </head>
 <body>
 
+<a href="Deck duelist rules.html" class="rules-btn">RULES</a>
+
 <div id="game-over">
     <h1 id="win-status" style="color: #f1c40f; font-size: 3rem;">GAME OVER</h1>
-    <button onclick="location.reload()" style="padding: 20px 40px; font-size: 1.2rem;">PLAY AGAIN</button>
+    <button onclick="location.reload()" style="padding: 15px 30px; height:auto; width:auto;">PLAY AGAIN</button>
 </div>
 
 <div class="zone" id="pc-zone" onclick="handleDirectAttack()">
@@ -150,7 +154,8 @@ function renderZone(id, cards, isP) {
     const el = document.getElementById(id); el.innerHTML = '';
     cards.forEach((m, i) => {
         const d = createCardEl(m, true);
-        if(isP && currentMode) d.classList.add('target-mode');
+        if(isP && currentMode && currentMode !== 'selectAttacker') d.classList.add('target-mode');
+        if(isP && currentMode === 'selectAttacker' && !m.hasAttacked) d.classList.add('target-mode');
         if(isP && attackerIdx === i) d.classList.add('selected');
         if(!isP && currentMode === 'selectEnemy') d.classList.add('enemy-target');
         d.onclick = (e) => {
@@ -158,18 +163,15 @@ function renderZone(id, cards, isP) {
             if(!turnActive) return;
             if(isP) {
                 if(currentMode === 'attachAtk' && selectedIdx !== null) {
-                    if(m.usedAtkThisTurn) return msg("ALREADY ATTACHED ATK TO THIS UNIT");
+                    if(m.usedAtkThisTurn) return msg("ALREADY BOOSTED ATK THIS TURN");
                     m.atk += parseInt(pHand[selectedIdx].rank);
-                    m.usedAtkThisTurn = true;
-                    consumeHand();
+                    m.usedAtkThisTurn = true; consumeHand();
                 } else if(currentMode === 'attachShd' && selectedIdx !== null) {
-                    if(m.usedShdThisTurn) return msg("ALREADY ATTACHED SHD TO THIS UNIT");
+                    if(m.usedShdThisTurn) return msg("ALREADY BOOSTED SHD THIS TURN");
                     m.shd += parseInt(pHand[selectedIdx].rank);
-                    m.usedShdThisTurn = true;
-                    consumeHand();
+                    m.usedShdThisTurn = true; consumeHand();
                 } else if(currentMode === 'trap' && selectedIdx !== null) {
-                    m.hasTrap = true;
-                    consumeHand();
+                    m.hasTrap = true; consumeHand();
                 } else if(currentMode === 'selectAttacker' && !m.hasAttacked) {
                     attackerIdx = i;
                     if(pcField.length === 0) msg("CLICK PC AREA FOR DIRECT HIT");
