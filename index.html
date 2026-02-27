@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Deck Duelists: Balanced Edition</title>
+    <style>
+        body { 
+            font-family: sans-serif; background: #000; color: #eee; 
+            margin: 0; padding: 0; display: flex; flex-direction: column; 
+            height: 100vh; width: 100vw; overflow: hidden; 
+        }
+        #game-over {
+            display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.9);
+            z-index: 1000; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .zone { 
+            display: flex; align-items: center; justify-content: center; 
+            position: relative; width: 100%; box-sizing: border-box;
+            border-bottom: 1px solid #222;
+        }
+        #pc-zone { height: 23vh; background: rgba(231, 76, 60, 0.05); }
+        #info-zone { height: 7vh; background: #111; color: #f1c40f; font-weight: bold; font-size: 0.8rem; text-align: center; line-height: 7vh; }
+        #player-zone { height: 23vh; }
+        #hand-zone { height: 17vh; overflow-x: auto; background: #050505; }
+        #control-zone { 
+            height: 22vh; background: #111; border-top: 2px solid #f1c40f;
+            display: grid; grid-template-columns: repeat(3, 1fr); 
+            grid-template-rows: 1fr 1fr; gap: 3px; padding: 3px;
+        }
+        .card { 
+            height: 13vh; width: 9vh; 
+            background: #fff; color: #000; border-radius: 5px; 
+            display: flex; flex-direction: column; position: relative;
+            padding: 4px; cursor: pointer; border: 2px solid transparent; 
+            font-weight: bold; font-size: 0.9rem; box-sizing: border-box; flex-shrink: 0;
+        }
+        .field-card { height: 16vh; width: 11vh; }
+        .exhausted { opacity: 0.4; }
+        .card.selected { border-color: #f1c40f; background: #fffde7; }
+        .card.target-mode { border-color: #2ecc71; box-shadow: 0 0 10px #2ecc71; }
+        .card.enemy-target { border-color: #e74c3c; box-shadow: 0 0 10px #e74c3c; }
+        .rank-suit { position: absolute; left: 4px; top: 4px; display: flex; flex-direction: column; line-height: 1; }
+        .card-label { position: absolute; font-size: 0.6rem; padding: 1px 3px; border-radius: 2px; color: #fff; font-weight: 900; }
+        .atk-label { top: 2px; right: 2px; background: #d32f2f; }
+        .shd-label { bottom: 2px; right: 2px; background: #388e3c; }
+        .trap-label { bottom: 2px; left: 50%; transform: translateX(-50%); background: #9c27b0; min-width: 20px; text-align: center;}
+        .lp-bar { position: absolute; left: 10px; width: 80px; height: 8px; background: #333; border: 1px solid #555; }
+        .lp-fill { height: 100%; background: #2ecc71; transition: width 0.3s; }
+        .lp-text { position: absolute; left: 10px; font-size: 0.7rem; color: #f1c40f; font-weight: bold; }
+        .card.Spades, .card.Clubs { color: #000; }
+        .card.Hearts, .card.Diamonds { color: #d32f2f; }
+        button { width: 100%; height: 100%; background: #f1c40f; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.7rem; text-transform: uppercase; }
+        .btn-go { background: #4caf50; color: white; }
+        .btn-end { background: #f44336; color: white; }
+    </style>
+</head>
+<body>
+
+<div id="game-over">
+    <h1 id="win-status" style="color: #f1c40f; font-size: 3rem;">GAME OVER</h1>
+    <button onclick="location.reload()" style="padding: 20px 40px; font-size: 1.2rem;">PLAY AGAIN</button>
+</div>
+
+<div class="zone" id="pc-zone" onclick="handleDirectAttack()">
+    <div class="lp-text" style="top: 5px;">PC LP: <span id="pc-lp">30</span></div>
+    <div class="lp-bar" style="top: 18px;"><div id="pc-lp-fill" class="lp-fill" style="width: 100%;"></div></div>
+    <div id="pc-field" style="display:flex; gap:6px;"></div>
+</div>
+
+<div class="zone" id="info-zone"><div id="msg">TURN 1: PREPARATION</div></div>
+
+<div class="zone" id="player-zone">
+    <div class="lp-text" style="top: 5px;">YOU LP: <span id="p-lp">30</span></div>
+    <div class="lp-bar" style="top: 18px;"><div id="p-lp-fill" class="lp-fill" style="width: 100%;"></div></div>
+    <div id="p-field" style="display:flex; gap:6px;"></div>
+</div>
+
+<div class="zone" id="hand-zone"><div id="p-hand" style="display:flex; gap:5px; padding: 8px;"></div></div>
+
+<div id="control-zone">
+    <button onclick="setMode('summon')">Summon</button>
+    <button onclick="setMode('attachAtk')">Add Atk</button>
+    <button onclick="setMode('attachShd')">Add Shd</button>
+    <button onclick="setMode('trap')">Set Trap</button>
+    <button id="atk-btn" class="btn-go" onclick="setMode('selectAttacker')">Attack</button>
+    <button class="btn-end" onclick="endTurn()">End Turn</button>
+</div>
+
+<script>
+const SUITS = ['Spades', 'Hearts', 'Diamonds', 'Clubs'];
+const RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+const CYCLE = { 'Spades': 'Clubs', 'Clubs': 'Diamonds', 'Diamonds': 'Hearts', 'Hearts': 'Spades' };
+
+let pLP = 30, pcLP = 30, pHand = [], pcHand = [], pField = [], pcField = [], pDeck = [], pcDeck = [];
+let currentMode = null, selectedIdx = null, turnActive = true, turnCount = 1, attackerIdx = null;
+
+function init() {
+    let all = [];
+    SUITS.forEach(s => RANKS.forEach(r => all.push({rank: r, suit: s})));
+    let f = all.filter(c => ['J','Q','K'].includes(c.rank));
+    let t = all.filter(c => ['10','A'].includes(c.rank));
+    let n = all.filter(c => !isNaN(c.rank));
+    shuffle(f); shuffle(t); shuffle(n);
+    pDeck = [...f.slice(0,6), ...t.slice(0,4), ...n.slice(0,16)];
+    pcDeck = [...f.slice(6,12), ...t.slice(4,8), ...n.slice(16,32)];
+    shuffle(pDeck); shuffle(pcDeck);
+    pHand = pDeck.splice(0, 5); pcHand = pcDeck.splice(0, 5);
+    render();
+}
+
+function shuffle(a) { for(let i=a.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [a[i], a[j]]=[a[j], a[i]]; } }
+
+function render() {
+    if (pLP <= 0 || pcLP <= 0) {
+        document.getElementById('game-over').style.display = 'flex';
+        document.getElementById('win-status').innerText = pLP <= 0 ? "PC WINS" : "YOU WIN";
+    }
+    document.getElementById('p-lp').innerText = pLP;
+    document.getElementById('pc-lp').innerText = pcLP;
+    document.getElementById('p-lp-fill').style.width = Math.max(0, (pLP/30 * 100)) + "%";
+    document.getElementById('pc-lp-fill').style.width = Math.max(0, (pcLP/30 * 100)) + "%";
+    document.getElementById('atk-btn').disabled = (turnCount === 1);
+    
+    const hEl = document.getElementById('p-hand'); hEl.innerHTML = '';
+    pHand.forEach((c, i) => {
+        const d = createCardEl(c);
+        if(selectedIdx === i) d.classList.add('selected');
+        d.onclick = () => { if(turnActive) { selectedIdx = i; currentMode = null; render(); } };
+        hEl.appendChild(d);
+    });
+    renderZone('p-field', pField, true);
+    renderZone('pc-field', pcField, false);
+}
+
+function createCardEl(c, isField = false) {
+    const d = document.createElement('div');
+    d.className = `card ${c.suit} ${isField ? 'field-card' : ''}`;
+    if(isField && c.hasAttacked) d.classList.add('exhausted');
+    d.innerHTML = `<div class="rank-suit"><span>${c.rank}</span><span>${c.suit[0]}</span></div>`;
+    if(isField) {
+        d.innerHTML += `<div class="card-label atk-label">${c.base + c.atk}</div>`;
+        d.innerHTML += `<div class="card-label shd-label">${c.shd}</div>`;
+        if(c.hasTrap) d.innerHTML += `<div class="card-label trap-label">T</div>`;
+    }
+    return d;
+}
+
+function renderZone(id, cards, isP) {
+    const el = document.getElementById(id); el.innerHTML = '';
+    cards.forEach((m, i) => {
+        const d = createCardEl(m, true);
+        if(isP && currentMode) d.classList.add('target-mode');
+        if(isP && attackerIdx === i) d.classList.add('selected');
+        if(!isP && currentMode === 'selectEnemy') d.classList.add('enemy-target');
+        d.onclick = (e) => {
+            e.stopPropagation();
+            if(!turnActive) return;
+            if(isP) {
+                if(currentMode === 'attachAtk' && selectedIdx !== null) {
+                    if(m.usedAtkThisTurn) return msg("ALREADY ATTACHED ATK TO THIS UNIT");
+                    m.atk += parseInt(pHand[selectedIdx].rank);
+                    m.usedAtkThisTurn = true;
+                    consumeHand();
+                } else if(currentMode === 'attachShd' && selectedIdx !== null) {
+                    if(m.usedShdThisTurn) return msg("ALREADY ATTACHED SHD TO THIS UNIT");
+                    m.shd += parseInt(pHand[selectedIdx].rank);
+                    m.usedShdThisTurn = true;
+                    consumeHand();
+                } else if(currentMode === 'trap' && selectedIdx !== null) {
+                    m.hasTrap = true;
+                    consumeHand();
+                } else if(currentMode === 'selectAttacker' && !m.hasAttacked) {
+                    attackerIdx = i;
+                    if(pcField.length === 0) msg("CLICK PC AREA FOR DIRECT HIT");
+                    else { currentMode = 'selectEnemy'; msg("SELECT ENEMY UNIT"); }
+                    render();
+                }
+            } else if(!isP && currentMode === 'selectEnemy') { resolveBattle(attackerIdx, i); }
+        };
+        el.appendChild(d);
+    });
+}
+
+function handleDirectAttack() {
+    if(attackerIdx !== null && pcField.length === 0) {
+        let pM = pField[attackerIdx];
+        let dmg = pM.base + pM.atk;
+        pcLP -= dmg;
+        pM.hasAttacked = true;
+        msg(`DIRECT HIT! ${dmg} DMG`);
+        pM.atk = 0; attackerIdx = null; currentMode = null;
+        render();
+    }
+}
+
+function resolveBattle(pIdx, pcIdx) {
+    let pM = pField[pIdx], pcM = pcField[pcIdx];
+    let atkPower = pM.base + pM.atk;
+    let defPower = pcM.base + pcM.shd;
+    if(CYCLE[pM.suit] === pcM.suit) atkPower += 2;
+    if(atkPower > defPower) {
+        pcLP -= (atkPower - defPower);
+        pcField.splice(pcIdx, 1);
+        msg("UNIT DESTROYED!");
+    } else { msg("BLOCKED!"); }
+    pM.hasAttacked = true;
+    pM.atk = 0; attackerIdx = null; currentMode = null;
+    render();
+}
+
+function setMode(m) {
+    if(!turnActive) return;
+    if(m === 'selectAttacker') {
+        let ready = pField.filter(mon => !mon.hasAttacked);
+        if(ready.length === 0) return msg("UNITS ALREADY ACTED");
+        currentMode = 'selectAttacker'; msg("CHOOSE ATTACKER"); render();
+    } else {
+        if(selectedIdx === null) return msg("PICK HAND CARD");
+        let c = pHand[selectedIdx];
+        if(m === 'summon') {
+            if(!['J','Q','K'].includes(c.rank)) return msg("NOT A MONSTER");
+            pField.push({...c, base: (c.rank=='J'?5:c.rank=='Q'?6:7), atk:0, shd:0, hasTrap:false, hasAttacked: false, usedAtkThisTurn: false, usedShdThisTurn: false});
+            consumeHand();
+        } else if (m === 'trap') {
+            if(!['10','A'].includes(c.rank)) return msg("NOT A TRAP");
+            if(pField.length === 0) return msg("NO GUARD");
+            currentMode = 'trap'; msg("SELECT GUARD"); render();
+        } else { currentMode = m; msg("SELECT TARGET"); render(); }
+    }
+}
+
+function consumeHand() { pHand.splice(selectedIdx, 1); selectedIdx = null; currentMode = null; render(); }
+function msg(t) { document.getElementById('msg').innerText = t; }
+
+function endTurn() {
+    turnActive = false; msg("PC TURN...");
+    pField.forEach(m => { m.hasAttacked = false; m.usedAtkThisTurn = false; m.usedShdThisTurn = false; });
+    
+    setTimeout(() => {
+        let fIdx = pcHand.findIndex(c => ['J','Q','K'].includes(c.rank));
+        if(fIdx !== -1 && pcField.length < 3) pcField.push({...pcHand.splice(fIdx, 1)[0], base: 5, atk: 0, shd: 0, hasTrap: false, hasAttacked: false});
+        if(pcField.length > 0) {
+            if(pField.length === 0) { pLP -= 5; msg("PC DIRECT HIT!"); }
+            else if(5 > (pField[0].base + pField[0].shd)) { pField.shift(); msg("YOUR UNIT LOST"); }
+        }
+        if(pDeck.length) pHand.push(pDeck.shift());
+        if(pcDeck.length) pcHand.push(pcDeck.shift());
+        turnCount++; turnActive = true; render(); msg(`YOUR TURN (T${turnCount})`);
+    }, 800);
+}
+
+init();
+</script>
+</body>
+</html>
