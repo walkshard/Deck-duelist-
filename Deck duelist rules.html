@@ -18,6 +18,7 @@
         .highlight { color: #f1c40f; font-weight: bold; }
         .limit-box { background: rgba(231, 76, 60, 0.1); border: 1px solid #e74c3c; padding: 15px; border-radius: 8px; margin: 20px 0; }
         footer { text-align: center; margin-top: 40px; color: #555; font-size: 0.8rem; }
+        .back-btn { display: block; text-align: center; margin-top: 20px; color: #f1c40f; text-decoration: none; font-weight: bold; border: 2px solid #f1c40f; padding: 10px; border-radius: 8px; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -29,14 +30,14 @@
     <h2>1. The Deck Setup</h2>
     <p>Each player uses a balanced 26-card deck consisting of:</p>
     <ul>
-        <li><span class="highlight">6 Monsters:</span> J, Q, K (2 of each).</li>
-        <li><span class="highlight">4 Traps:</span> 10, A (2 of each).</li>
+        <li><span class="highlight">6 Vanguards:</span> Jacks, Queens, Kings (2 of each).</li>
+        <li><span class="highlight">4 Traps:</span> Tens, Aces (2 of each).</li>
         <li><span class="highlight">16 Combat Cards:</span> Numbered 2 through 9.</li>
     </ul>
 
     <h2>2. Attachment Limits</h2>
     <div class="limit-box">
-        <strong>⚠️ Tactical Constraint:</strong> To prevent "One-Turn Kills," a monster may only receive <span class="highlight">ONE Attack boost</span> and <span class="highlight">ONE Shield boost</span> per turn. You must build your power over multiple rounds.
+        <strong>⚠️ Tactical Constraint:</strong> To prevent "One-Turn Kills," a Vanguard may only receive <span class="highlight">ONE Attack boost</span> and <span class="highlight">ONE Shield boost</span> per turn. You must build your power over multiple rounds.
     </div>
 
     <h2>3. Card Roles & HUD</h2>
@@ -44,28 +45,38 @@
         <div class="card-ref">
             <span class="highlight">Vanguards (Field)</span><br>
             - <strong>Top Left:</strong> Rank & Suit<br>
-            - <strong>Top Right:</strong> Current Attack<br>
+            - <strong>Top Right:</strong> Total Attack Power<br>
             - <strong>Bottom Right:</strong> Defense Shield<br>
             - <strong>Bottom Mid:</strong> Trap Status
         </div>
         <div class="card-ref">
             <span class="highlight">Traps (10 & Ace)</span><br>
-            Set these cards on your monsters to prepare for the opponent's turn. Traps must be targeted to a specific Vanguard.
+            Set these on your Vanguards to prepare for the PC's turn. Traps must be targeted to a specific Vanguard on your field.
         </div>
     </div>
 
-    <h2>4. Combat Rules</h2>
+    <h2>4. Synergy (Elemental Cycle)</h2>
+    <div class="cycle-box">
+        <span class="suit-spades">♠ Spades</span> beats <span class="suit-clubs">♣ Clubs</span><br>
+        <span class="suit-clubs">♣ Clubs</span> beats <span class="suit-diamonds">♦ Diamonds</span><br>
+        <span class="suit-diamonds">♦ Diamonds</span> beats <span class="suit-hearts">♥ Hearts</span><br>
+        <span class="suit-hearts">♥ Hearts</span> beats <span class="suit-spades">♠ Spades</span>
+    </div>
+    <p><strong>How Synergy Works:</strong> When your Vanguard attacks an enemy, the suits are compared. If your Vanguard has the elemental advantage, it receives an automatic <span class="highlight">+2 Attack Power</span> bonus for that specific battle. Use this to break through high-defense shields.</p>
+
+    <h2>5. Combat Rules</h2>
     <ul>
-        <li><strong>First Turn:</strong> No attacks are permitted. Use this time to Summon and Shield.</li>
-        <li><strong>One Action:</strong> Each monster may only attack <span class="highlight">once per turn</span>. After attacking, they are exhausted until your next turn.</li>
-        <li><strong>Elemental Cycle:</strong> ♠ beats ♣ | ♣ beats ♦ | ♦ beats ♥ | ♥ beats ♠. Successful advantage grants <span class="highlight">+2 Attack Power</span>.</li>
-        <li><strong>Direct Attacks:</strong> If the opponent has no monsters, you may target their Life Points (LP) directly.</li>
+        <li><strong>First Turn:</strong> No attacks permitted. Use this time to Summon and Shield.</li>
+        <li><strong>Exhaustion:</strong> Each Vanguard may only attack <span class="highlight">once per turn</span>. After acting, they are faded out until your next turn.</li>
+        <li><strong>Direct Attacks:</strong> If the opponent has no Vanguards on the field, you may target their Life Points (LP) directly by clicking the PC area.</li>
     </ul>
 
-    <h2>5. Win Conditions</h2>
+    <h2>6. Win Conditions</h2>
     <p>Reduce the opponent's Life Points from 30 to <span class="highlight">0 or below</span> to win instantly. If the deck is depleted, the player with the highest remaining LP is the victor.</p>
 
-    <footer>DECK DUELISTS ENGINE V1.2 - REVISED FEB 2026</footer>
+    <a href="index.html" class="back-btn">Back to Game</a>
+
+    <footer>DECK DUELISTS ENGINE V1.3 - REVISED FEB 2026</footer>
 </div>
 
 </body>
